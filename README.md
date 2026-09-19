@@ -13,9 +13,15 @@ This system automates water transfer from a low-yield well into a residential st
 * **Onsite & Remote Interfaces:** Features a local 20x4 character LCD display for immediate status checks alongside a lightweight web dashboard hosted on the Pico 2 W for remote monitoring.
 * **Data & Trend Logging:** A lightweight web page hosted on the Pico displays fill and usage patterns, storing data in space-efficient format of .bin for maximum longevity.
 
+
 ```mermaid
+    ---
+    config:
+      flowchart:
+        curve: basis
+    ---
     flowchart LR
-        %% Styling
+
     classDef mainPico fill:#0284c7,stroke:#0369a1,color:#fff,font-weight:bold
     classDef subPico fill:#0d9488,stroke:#0f766e,color:#fff,font-weight:bold
 
