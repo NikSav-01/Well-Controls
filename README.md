@@ -36,17 +36,17 @@ This system automates water transfer from a low-yield well into a residential st
 | :--- | :--- | :--- | :--- |
 | Primary Controller | Raspberry Pi Pico 2 W | 3.3V Logic / Wi-Fi | Runs core FSM logic, hosts web dashboard, drives LCD, gathers telemetry |
 | Secondary Controller | Raspberry Pi Pico | 3.3V GPIO | Filters flow meter pulses and feeds binary state to Pico 2 W |
-| Tank Level Sensor | Hydrostatic Sensor (TL-136) | 0-4.33 PSI → 4–20 mA 24 V | Converts pressure head in tank into 4-20 mA current |
-| Current to Voltage Convertor | CV Convertor (LY254) | 4–20 mA 24 V → 0-3.3V ADC | Converts current from the Hydrostatic sensor into a 0-3.3 V analog input |
-| Dry-Well Protection | Cycle Sensor (CS1PH1-2HP) | 240 V | Independent controller that monitors well pump current to determine dry-well events, and controls on/off of well pump |
-| Voltage Reader | Voltage Detector/Optocoupler B0C73GGKHX | 0/3.3V | Measures Line voltage in Cycle Sensor (CS1PH1-2HP), determining if it is sending a signal for the well to run |
-| Voltage Reader | Voltage Detector/Optocoupler B0C73GGKHX | 0/3.3V | Measures Line voltage in the house pump VFD, determining if the house pump is running |
-| Tank Level Switches | Float Switch (LS-FLOAT-KIT) | 0/24V | Switches on or off based on level of water in tank, contains two switches, set/reset |
-| Relays | 1-Channel Relay Module (AE14921a) | 0/24V → 0/3.3V | Converts Float Switch High/Low to Pico High/Low voltage |
-| Flow sensor | Hall-Effect Sensor (YF-S402C) | GPM → 3.3V Pulses | Provides flow of the water in pulses to secondary Pico |
-| Navigation | 6x6x5mm Tact Switch | 0/3.3V | Allows user input to control local display |
-| Local Display | 20x4 Character LCD (B007) | 5V / I2C (with PCF8574T chip) | Displays real-time system state, tank statistics, and access to system controls |
-| Relay | 1-Channel Relay Module (RK-S1B4-G97L) | 0/3.3 V → 0/24 V | Intermediary relay between Pico 2 W and relay 3-01-1810-24V to power well pump |
-| Relay | 1-Channel Relay Module (3-01-1810-24V) | 0/24 VDC → 0/240 VAC | Controls on/off of well pump |
-| Relay | 1-Channel Relay Module (RK-S1B4-G97L) | 0/3.3 V → 0/12 V | Controls on/off of booster pump |
-| Pump Speed Controller | PWM Motor Driver (BTS7960B) | 3.3V PWM → 12V PWM | Controls speed of booster pump using a 16-bit PWM duty cycle |
+| Tank Level Sensor | Hydrostatic Sensor (TL-136) | 0-4.33 PSI → 4–20 mA (24 V) | Converts hydrostatic pressure head in tank into a 4–20 mA current signal |
+| Current-to-Voltage Convertor | CV Convertor Module (LY254) | 4–20 mA (24 V) → 0-3.3V ADC | Converts 4–20 mA sensor current to a 0–3.3V analog input for Pico 2 W ADC |
+| Dry-Well Protection | Cycle Sensor (CS1PH1-2HP) | 240VAC Mains | Independent hardware monitor reading well pump current for dry-well protection |
+| Well Run Monitor | Optocoupler Module (B0C73GGKHX) | 240VAC Line → 0/3.3V Logic | Detects line voltage from Cycle Sensor to inform Pico 2 W if well run signal is active |
+| House Run Monitor | Optocoupler Module (B0C73GGKHX) | VFD Line → 0/3.3V Logic | Reads VFD line voltage to inform Pico when house pump is actively running |
+| Tank Level Switches | Dual Float Switch Kit (LS-FLOAT-KIT) | 24VDC Dry Contact | High/Low water limit switches configured in a Set/Reset pattern |
+| Float Switch Relay | 1-Channel Relay Module (AE14921a) | 0/24V → 0/3.3V Logic | Steps down 24V float switch signals to 3.3V Pico logic inputs |
+| Flow sensor | Hall-Effect Sensor (YF-S402C) | GPM → 3.3V Pulses | Sends water flow pulses to secondary Pico for noise filtering |
+| Navigation Switches | 6x6x5mm Tactile Switches | 3.3V Active-HIGH | Provides 4-button user input for local LCD menu navigation |
+| Local Display | 20x4 Character LCD (B007) | 5V / I2C (PCF8574T Driver) | Displays real-time system state, tank statistics, and control menus |
+| Well Relay (Stage 1) | 1-Channel Relay Module (RK-S1B4) | 0/3.3V Logic → 0/24VDC | Intermediary relay driven by Pico 2 W to trigger 24V high-power relay |
+| Well Relay (Stage 2) | 1-Channel Relay Module (3-01-1810-24V) | 0/24VDC → 0/240VAC | High-voltage relay provides 240VAC mains power to well pump |
+| Booster Pump Relay | 1-Channel Relay Module (RK-S1B4) | 0/3.3V Logic → 0/12VDC | Switches 12VDC power to booster pump motor driver |
+| Pump Speed Controller | PWM Motor Driver (BTS7960B) | 3.3V PWM → 12V PWM | Regulates booster pump speed using a 16-bit PWM duty cycle |
