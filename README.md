@@ -19,17 +19,15 @@ This system automates water transfer from a low-yield well into a residential st
 
 ### Key Features & Safety Logic
 
-The core firmware operates as a deterministic finite state machine (FSM), built to prevent rapid pump cycling, eliminate dry-run damage, and maintain continuous operational visibility.
-
 #### Hardware Safety & Dry-Run Protection
-* **Dry-well Protection** The secondary Pico reads flow data from the well line, filtering out noise and potential outlier readings to determine true stagnation of flow. Amperage reading of well pump determines if the well has suddenly run dry due less resistance from no water flow. Using both systems, all dry-well events are caught and power cuts to well pump and booster pump to prevent damage.
-* **Recovery Time:** An adjustable lockout period is started after a dry-well event, allowing the aquifer time to recover before attempting a fill cycle.
-* **Grace Period:** Upon startup, allows a short grace period before monitoring for the dry-well state, allowing pumps to startup and for the flow and amperage readings to set up a baseline.
-* **Set/Reset Sensors:** Uses two level sensors in the tank in a Set/Reset configuration to prevent rapid cycling of the well every time water falls below the max sensor.\
+* **Dry-well Protection** The secondary Pico reads flow data from the well line, filtering out noise and outliers to confirm true flow stagnation. Simultaneously, motor amperage is monitored to catch sudden drops in load resistance when the pump loses prime. Combining both inputs ensures all dry-well events are caught immediately, cutting power to both pumps to prevent mechanical damage.
+* **Recovery Lockout:** An adjustable lockout timer starts after a dry-well event, giving the aquifer time to recover before re-attempting a fill cycle.
+* **Grace Period:** Allows a short grace period upon pump startup before starting dry-well monitoring, giving pumps time to prime and establishing baseline flow and current readings.
+* **Set/Reset Sensors:** Uses two tank level sensors in a set/reset configuration to prevent rapid cycling every time the water level fluctuates near the maximum level sensor.
 
 #### Displays & Optimized Storage
-* **On-Site Display:** A 20x4 LCD display and four buttons are located next to the pumps and electronics to provide immediate feedback on the level of the tank, the state of the pumps, daily average trends of fill and tank readings, and manual controls for the pumps, pump speed, and dry-well recovery duration.
-* **Web Dashboard:** Locally hosted web page on the Pico 2 W, containing a real-time graph of the well water level readings, a full spreadsheet of all daily recorded data, and settings to control the pumps, similar to the on-site display.
-* **Long-term Data Retention:** Packs daily timestamped min/max tank readings, fill amount, daily usage, and pump runtimes into a custom binary structure to minimize flash wear and maximize data on the limited 4 MB of memory on the Pico 2 W.
-* **Short-term Data Retention:** Displays a real-time graph of recorded water level readings, up to a week ago, along with options for a higher density graph of 3 days and 24 hours ago, in a custom binary structure to maximize data displayed on the web dashboard given the limited 520 KB of SRAM.
-* **Scheduled Restarts:** Every five days the Pico checks to make sure it's in a dormant state (when the well isn't actively pumping) and restarts to clear and avoid any memory fragmentation, especially given memory-intensive Web Dashboard hosted by the Pico.
+* **On-Site Display:** A local 20x4 LCD display and a 4-button navigation array provide immediate feedback on tank capacity, active pump states, and daily fill/usage averages. Includes manual overrides for pump control, motor speed, and the dry-well recovery timer.
+* **Web Dashboard:** A lightweight web page hosted directly on the Pico 2 W featuring real-time water level graphs, full daily data spreadsheets, and remote system configuration options, similar to the on-site display.
+* **Long-term Data Retention:** Packs daily timestamped min/max tank levels, fill volumes, usage rates, and total pump runtimes into a custom binary (.bin) structure to minimize flash memory wear and stretch storage across the Pico 2 W's 4 MB flash memory.
+* **Short-term Data Retention:** Maintains high-resolution water level data in SRAM for 24-hour, 3-day, and 7-day web dashboard graphs. To save memory and network bandwidth on the Pico, data is transmitted as a compressed binary stream and unpacked in the browser for rendering, keeping in mind the 520 KB SRAM constraints of the Pico 2 W.
+* **Scheduled Memory Management:** Monitors system states to execute a clean reboot every five days during dormant periods (when pumps are idle), clearing heap allocation and preventing memory fragmentation from the web server.
