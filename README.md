@@ -50,3 +50,11 @@ This system automates water transfer from a low-yield well into a residential st
 | Well Relay (Stage 2) | 1-Channel Relay Module (3-01-1810-24V) | 0/24VDC → 0/240VAC | High-voltage relay provides 240VAC mains power to well pump |
 | Booster Pump Relay | 1-Channel Relay Module (RK-S1B4) | 0/3.3V Logic → 0/12VDC | Switches 12VDC power to booster pump motor driver |
 | Pump Speed Controller | PWM Motor Driver (BTS7960B) | 3.3V PWM → 12V PWM | Regulates booster pump speed using a 16-bit PWM duty cycle |
+
+### Signal Conditioning & Noise Immunity
+Operates near a VFD and a pump motor, creating significant electromagnetic interference. To maintain reliable operation, key hardware and software signal conditioning controls were added:
+
+Stronger Resistors: Utilizes external pull-down and pull-up resistors to sink ~0.2V of stray EMI voltage that bypassed the Pico's internal resistors.
+RC Line Filtering: Combines a capacitor and pull-down resistor at the main Pico to form a low-pass filter, absorbing noise spikes and signal stuttering across the 30 ft data lines.
+Software Sample Averaging: Uses a simple software filter to determine the true state of the pin by taking multiple consecutive readings and evaluating the majority result.
+
