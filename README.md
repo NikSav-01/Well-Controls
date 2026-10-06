@@ -58,3 +58,35 @@ Stronger Resistors: Utilizes external pull-down and pull-up resistors to sink ~0
 RC Line Filtering: Combines a capacitor and pull-down resistor at the main Pico to form a low-pass filter, absorbing noise spikes and signal stuttering across the 30 ft data lines.
 Software Sample Averaging: Uses a simple software filter to determine the true state of the pin by taking multiple consecutive readings and evaluating the majority result.
 
+### Repository Structure
+```
+├── main.py                        # Primary Pico 2 W control loop (FSM, web server, telemetry, logging)
+├── index.html                     # Web dashboard frontend hosted on Pico 2 W
+├── settings.txt                   # System configuration constants
+├── wifi.txt.example               # Template for local Wi-Fi credentials (SSID & Password)
+├── tank_data.bin                  # Binary log file storing historical daily tank level, fill amounts, etc.
+├── tank_data_metadata.txt         # Metadata file for tank_data.bin
+├── temp_high_low.txt              # Temporary daily storage incase of unexpected power loss
+├── secondary_main.py              # Secondary Pico main control loop
+├── tools/
+│   └── DomeCalculation.py         # Offline numerical integration script for non-linear tank geometry
+└── assets/
+    ├── system-architecture.svg     # Rendered system architecture diagram
+    ├── flowchart.mmd               # Mermaid source code for architecture diagram
+    ├── dashboard-overview.png      # Screenshot of live telemetry dashboard
+    └── dashboard-controls.png      # Screenshot of web control interface
+```
+
+### Script & File Overview
+`main.py` (Primary Controller): Runs the main Finite State Machine on the Raspberry Pi Pico 2 W. Performs sensor reads, menu navigation, binary file logging, web server requests, and safety relay interlocks.
+`secondary_main.py` (Secondary Controller): Runs on the remote Pico connected to the flow sensor. Filters hall-effect pulse streams, sending a clean binary flow signal to the primary Pico over a 30-foot data line.
+`index.html`: Single-page web dashboard stored on the Pico 2 W filesystem, providing real-time telemetry graphs, status updates, and manual override controls.
+`tools/DomeCalculation.py` (Offline Geometry Tool): Performs integration over the tank's complex upper dome and chimney geometry to calculate volume per 0.01 ft of water depth. Generated values above 6.3 ft are pre-defined in a lookup array to save ~20 seconds of boot time on the Pico 2 W.
+
+Configuration & Storage Files:
+* `settings.txt`: Stores changeable settings like pump states, pump speed, and well recovery delay.
+* `wifi.txt.example`: Template containing network credentials (SSID/Password) for network connectivity.
+* `tank_data.bin`: High-density, low-wear binary telemetry log file.
+* `tank_data_metadata.txt`: Index and metadata tracking schema for `tank_data.bin`.
+* `temp_high_low.txt`: Temporary daily file that prevents data loss if power drops before committing to `tank_data.bin`.
+* `system-architecture.svg` & `flowchar.mmd`: Rendered SVG vector diagram and raw Mermaid source code.
