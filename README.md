@@ -69,7 +69,7 @@ Software Sample Averaging: Uses a simple software filter to determine the true s
 ├── temp_high_low.txt              # Temporary daily storage incase of unexpected power loss
 ├── secondary_main.py              # Secondary Pico main control loop
 ├── tools/
-│   └── DomeCalculation.py         # Offline numerical integration script for non-linear tank geometry
+│   └── dome_calculation.py        # Offline numerical integration script for non-linear tank geometry
 └── assets/
     ├── system-architecture.svg     # Rendered system architecture diagram
     ├── flowchart.mmd               # Mermaid source code for architecture diagram
