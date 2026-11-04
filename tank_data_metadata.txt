@@ -1,0 +1,14 @@
+Tank data metadata
+
+Columns:
+1) Month data was taken
+2) Day data was taken
+3) Year data was taken
+4) Lowest tank reading in recorded 24 hours (gallons)
+5) Highest tank reading in recorded 24 hours (gallons)
+6) The hour when the lowest reading was recorded. Eg. 14.3 -> 14:18
+7) The hour when the highest reading was recorded. Eg. 21.9 -> 21:54
+8) How much gallons were pumped into the tank solely by the well (gallons)
+9) How confident the well pump data is (if the house pump is pumping water out while the well is pumping water in, discrepancies are averaged out, but the data isn't 100% accurate. Nonconfidence is exaggerated and shouldn't be taken mathematically or literally.)
+10) Tank Reading taken at record reset every night (3 AM, gallons)
+11) How long the well was filling the tank during the recorded 24 hours (seconds)

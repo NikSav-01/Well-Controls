@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Water System Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAMAAADXqc3KAAAAhFBMVEVHcEwjqOgEeMAFecESjdIFecIipeYFecIXltkGeMAFecEFecEip+gkqegFecISjtQCdrQEeMIhpuYFeL9KuOsip+cfpegapukEesAEesEFeMMEeL8goOIBc7wjqOgNhMourOg/s+oYltkEecEkqekZmdwgpOUGfcQKgscLhcpuxu4QjNDqEOsSAAAAI3RSTlMA/W7vDNentFAx+ppt6CUHAVonS/kxFEFIOhXh9hTExM35vblhWAAAAACRSURBVCjPvZHJFoIwDEXpKIJAGZ1FTQsq//9/Nq7ssCbLe8/LeTlJknWnaeK8krKKipRc0hgfbnoarxGx05q8acj7AsV563MuNQrYcH8RsWJ6QeYtG+4dihlAnP656ruPFQYA2NFJ7B8oFiuyg5soMDBjwu3Fn8YsyINaLYPfsNarq2qBXNQqOL2keU7LVf/8Bd0jDVum/4EUAAAAAElFTkSuQmCC">
+    <style>
+        body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;margin:0;padding:0;min-height:100vh;display:flex;flex-direction:column;background:#1a1a1a;color:#eee}
+        .top-section{display:flex;flex-direction:row;height:100vh;border-bottom:2px solid #333}
+        .sidebar{min-width:50px;max-width:2000px;background:#252525;padding:20px;box-sizing:border-box;border-right:2px solid #333;overflow-y:auto;overflow-x:hidden;height:100%;position:relative;flex-shrink:0;width:250px}
+        .table-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;position:relative;padding:0 5px}
+        h3{margin:0;font-size:1.2rem}
+        .header-right{display:flex;gap:10px;align-items:center}
+        .pagination-wrapper{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:5px}
+        #paginationBtns{display:flex;gap:2px}
+        .page-btn{border:1px solid #ddd;background:#f9f9f9;padding:2px 6px;cursor:pointer;border-radius:3px;min-width:24px;text-align:center;font-size:0.85rem;line-height:1.2}
+        .page-btn:hover:not(.disabled){background:#e9e9e9}
+        .page-btn.active{background:#007bff;color:white;border-color:#007bff}
+        .page-btn.disabled{color:#ccc;cursor:default;border:1px solid #eee}
+        .page-jump{width:55px;padding:3px 5px;border:1px solid #ccc;border-radius:4px;text-align:center;font-family:inherit;font-size:0.9rem}
+        .rows-per-page{padding:3px 5px;border:1px solid #ccc;border-radius:4px;font-family:inherit;font-size:0.9rem}
+        .btn-compact{padding:5px 20px;font-size:0.9rem}
+        .btn-tiny{padding:2px 8px;font-size:0.8rem;background:#444;border:1px solid #555;color:#ddd;cursor:pointer;border-radius:3px;margin-left:5px}
+        .btn-tiny:hover{background:#555}
+        .range-buttons{display:flex;flex-direction:column;gap:5px;margin-bottom:15px;margin-top:10px}
+        .range-btn{padding:8px;background:#333;border:1px solid #444;color:#aaa;cursor:pointer;border-radius:4px;font-size:0.9rem;text-align:center;transition:0.2s}
+        .range-btn:hover{background:#444;color:#fff}
+        .range-btn.active{background:#007bff;border-color:#007bff;color:#fff}
+        #resizer{width:10px;height:100%;background:transparent;position:absolute;right:0;top:0;cursor:col-resize;z-index:100;touch-action:none}
+        #resizer:hover,#resizer.active{background:#00d2ff}
+        .graph-container{flex-grow:1;height:100%;position:relative;background:#000;overflow:hidden}
+        .bottom-section{flex-grow:1;background:#fff;color:#333;overflow-y:auto;padding:10px}
+        .button-row{display:flex;gap:10px;margin-bottom:10px}
+        .btn-small{padding:5px 10px;font-size:0.85rem;background:#444;border:1px solid #555;width:auto;flex:1}
+        .btn-small:hover{background:#555}
+        h2{margin-top:0;border-bottom:1px solid #444;padding-bottom:10px;font-size:1.2rem}
+        button{width:100%;padding:10px;margin-bottom:10px;background:#007bff;color:white;border:none;cursor:pointer;border-radius:4px;font-size:1rem}
+        button:hover{background:#0056b3}
+        table{width:100%;border-collapse:collapse}
+        th,td{border:1px solid #ddd;padding:8px;text-align:left}
+        th{background-color:#f2f2f2}
+        table tr:nth-child(even){background-color:#f2f2f2}
+        thead tr{background-color:#fff}
+        canvas{display:block;width:100%;height:100%}
+        .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,0.7);z-index:1000;justify-content:center;align-items:center}
+        .modal-content{background-color:#252525;color:#eee;padding:20px;border-radius:8px;width:90%;max-width:400px;border:1px solid #444;box-shadow:0 4px 15px rgba(0,0,0,0.5)}
+        .modal-header{font-size:1.2rem;font-weight:bold;margin-bottom:10px;border-bottom:1px solid #444;padding-bottom:10px;color:#00d2ff}
+        .modal-row{margin-bottom:15px}
+        .modal-label{display:block;font-size:0.9rem;color:#aaa;margin-bottom:5px}
+        .modal-input{width:100%;padding:8px;box-sizing:border-box;background:#333;border:1px solid #555;color:white;border-radius:4px}
+        .modal-buttons{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+        .btn-save{background-color:#28a745}
+        .btn-cancel{background-color:#dc3545}
+        .btn-save:hover{background-color:#218838}
+        .btn-cancel:hover{background-color:#c82333}
+        .checkbox-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+        .checkbox-label{display:flex;align-items:center;gap:5px;cursor:pointer;font-size:0.9rem;color:#ccc}
+        .checkbox-label input{margin:0}
+    </style>
+</head>
+<body>
+    <div class="top-section">
+        <div class="sidebar" id="sidebar">
+            <h2>Status</h2>
+            <p>Level: <strong id="currentLevel" style="color: #00d2ff; font-size: 1.2em;">VAR_LEVEL</strong> gal</p>
+            <p>Percent Full: <strong id="percentFull">VAR_PERCENT</strong>%</p>
+            <p>Well Pumping: <strong id="pumpStatus">VAR_STATUSWELL</strong></p>
+            <p>House Pumping: <strong id="pumpStatus">VAR_STATUSHOUSE</strong></p>
+            <p id="wellResetTimer" style="display: none; color: #ffa502; margin-top: -10px; font-size: 0.9rem;">Well Restart In: <strong id="resetTimeVal">VAR_TIME_LEFT_RESET</strong> mins</p>
+            <div class="range-buttons">
+                <div class="range-btn active" onclick="setRange(24)">Past 24 Hours</div>
+                <div class="range-btn" onclick="setRange(72)">Past 3 Days</div>
+                <div class="range-btn" onclick="setRange(168)">Past Week</div>
+            </div>
+            <hr style="border-color: #444; margin-top: 20px; margin-bottom: 10px;">
+            <div class="button-row">
+                <button class="btn-small" onclick="toggleSettings()">Edit Settings</button>
+                <button class="btn-small" style="background-color: #28a745;" onclick="openDownloadModal()">Download Records</button>
+            </div>
+            <div id="resetGraphRow" class="button-row" style="margin-top:0; display: none;">
+                 <button class="btn-small" style="background-color: #dc3545; flex: 1;" onclick="resetGraph()">Reset Graph to Live</button>
+            </div>
+            <div id="settingsPanel" style="display: none; margin-top: 10px; border-top: 1px solid #444; padding-top: 10px;">
+                <p style="font-size: 0.8rem; color: #888;">Configuration</p>
+                <button onclick="changeSetting(1)">Well Pump</button>
+                <button onclick="changeSetting(2)">Booster Well Pump</button>
+                <button onclick="changeSetting(3)">Dry Interval</button>
+                <button onclick="changeSetting(4)">Trend Period Overall Change</button>
+                <button onclick="changeSetting(5)">Trend Period Average Daily Draw</button>
+                <button onclick="changeSetting(6)">Booster Pump Speed</button>
+                <button onclick="toggleSettings()" style="background: #333; margin-top: 5px;">Close</button>
+            </div>
+            <div id="resizer"></div>
+        </div>
+        <div class="graph-container" id="graphContainer">
+            <h3 id="graphTitle" style="margin: 10px auto; left: 0; right: 0; color: #00d2ff; z-index: 10; position: absolute; text-align: center;">Tank Level (Past 24 Hours)</h3>
+            <canvas id="graphCanvas"></canvas>
+        </div>
+    </div>
+    <div class="bottom-section">
+        <div class="table-header">
+            <h3>Data Logs</h3>
+            <div class="pagination-wrapper">
+                <div id="paginationBtns" style="display:flex; gap:2px;"></div>
+                <input type="number" id="pageJumpInput" class="page-jump" placeholder="Go" min="1">
+            </div>
+            <div class="header-right">
+                <select id="rowsSelect" class="rows-per-page" onchange="changeRowsPerPage()">
+                    <option value="10">10</option>
+                    <option value="25" selected>25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+                <button onclick="openGraphModal()" class="btn-compact">Show Graph</button>
+            </div>
+        </div>
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th title="Month, Day, and Year the data was recorded.">Date</th>
+                        <th title="Lowest tank reading recorded in the 24-hour period (gallons).">Lowest Reading (Gal)</th>
+                        <th title="Highest tank reading recorded in the 24-hour period (gallons).">Highest Reading (Gal)</th>
+                        <th title="Time when the lowest reading was recorded.">Time at Low</th>
+                        <th title="Time when the highest reading was recorded.">Time at High</th>
+                        <th title="Total gallons pumped into the tank solely by the well.">Well Tank Fill (Gal)</th>
+                        <th title="Confidence level of fill data. Lower accuracy if house pump was running simultaneously.">Confidence of Fill Data</th>
+                        <th title="Net change in tank level compared to the previous day (gallons).">Daily Change (Gal)</th>
+                        <th title="Estimated total water usage calculated from fill and level change.">Daily Usage (Gal)</th>
+                        <th title="Tank reading taken at the daily record reset time (e.g., 3 AM).">Tank Level During Reset</th>
+                        <th title="Duration the well was actively filling the tank.">Fill Time</th>
+                        <th title="Average flow rate of the well pump during operation.">Flow of Well (Gal/min)</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        function toggleSettings(){const panel=document.getElementById('settingsPanel');panel.style.display=panel.style.display==='none'?'block':'none'}
+        const canvas=document.getElementById('graphCanvas');const ctx=canvas.getContext('2d');const container=document.getElementById('graphContainer');
+        let graphMode='live';let parsedTableData=[];let endTime=new Date();
+        const rawTimeString="VAR_TIME";const timeParts=rawTimeString.split(':');
+        if(timeParts.length>=3){endTime.setHours(parseInt(timeParts[0]));endTime.setMinutes(parseInt(timeParts[1]));endTime.setSeconds(parseInt(timeParts[2]))}
+        let width,height,graphWidth,graphHeight;const padding={top:20,right:10,bottom:30,left:50};
+        const raw24="VAR_DATA_24";const data24=raw24.split(',').map(Number); const raw72="VAR_DATA_72";const data72=raw72.split(',').map(Number); const raw168="VAR_DATA_168";const data168=raw168.split(',').map(Number); let currentRangeHours = 24; let visibleData = [];
+        const settingsDB={1:{title:"Well Pump",desc:"Setting for the main well pump. \n 2 - Auto, 1 - Always On, 0 - Always Off",def:2,current:2,min:0,max:2},2:{title:"Booster Well Pump",desc:"Setting for the small booster well pump. \n 2 - Auto, 1 - Always On, 0 - Always Off",def:2,current:2,min:0,max:2},3:{title:"Dry Interval",desc:"Minutes to wait after well runs dry to restart. \n Must be greater than or equal to minutes on dry well sensor.",def:300,current:300,min:1,max:999},4:{title:"Trend Period Overall Change",desc:"List of trend periods in days (3 integers) to calculate overall change. Pico display only.",def:[3,7,14],current:[3,7,14],min:[3,3,3],max:[99,99,99]},5:{title:"Trend Period Average Daily Draw",desc:"List of trend periods in days (3 integers) to calculate average daily draw. Pico display only.",def:[3,7,14],current:[3,7,14],min:[3,3,3],max:[99,99,99]},6:{title:"Booster Pump Speed",desc:"Speed control for booster pump. Speed in terms of percent (%)",def:100,current:100,min:0,max:100}};
+        const remoteSettings=JSON.parse("VAR_CURRENT_SETTINGS");
+        if(remoteSettings.length>=1&&settingsDB[1])settingsDB[1].current=remoteSettings[0];
+        if(remoteSettings.length>=2&&settingsDB[2])settingsDB[2].current=remoteSettings[1];
+        if(remoteSettings.length>=3&&settingsDB[3])settingsDB[3].current=remoteSettings[2];
+        if(remoteSettings.length>=4&&settingsDB[4])settingsDB[4].current=remoteSettings[3];
+        if(remoteSettings.length>=5&&settingsDB[5])settingsDB[5].current=remoteSettings[4];
+        if(remoteSettings.length>=6&&settingsDB[6])settingsDB[6].current=remoteSettings[5];
+        let currentEditingId=null;
+        function setRange(hours){currentRangeHours=hours;document.querySelectorAll('.range-btn').forEach(btn=>{btn.classList.remove('active');if((hours===24&&btn.innerText.includes("24 Hours"))||(hours===72&&btn.innerText.includes("3 Days"))||(hours===168&&btn.innerText.includes("Week")))btn.classList.add('active')});if(hours===24)visibleData=data24;else if(hours===72)visibleData=data72;else visibleData=data168;resize()}
+        function changeSetting(id){const data=settingsDB[id];if(!data)return;currentEditingId=id;document.getElementById('m_title').innerText=data.title;document.getElementById('m_desc').innerText=data.desc;document.getElementById('m_default').innerText=Array.isArray(data.def)?data.def.join(', '):data.def;const container=document.getElementById('inputContainer');container.innerHTML='';if(Array.isArray(data.current)){data.current.forEach((val,index)=>{const label=document.createElement('div');label.style.fontSize='0.8rem';label.style.color='#aaa';label.style.marginBottom='2px';label.innerText=`Value ${index+1}:`;const input=document.createElement('input');input.type='number';input.className='modal-input';input.value=val;input.id=`list_input_${index}`;input.style.marginBottom='10px';if(Array.isArray(data.min))input.min=data.min[index];else if(data.min!==undefined)input.min=data.min;if(Array.isArray(data.max))input.max=data.max[index];else if(data.max!==undefined)input.max=data.max;container.appendChild(label);container.appendChild(input)})}else{const input=document.createElement('input');input.type='number';input.id='m_input';input.className='modal-input';input.value=data.current;if(data.min!==undefined)input.min=data.min;if(data.max!==undefined)input.max=data.max;container.appendChild(input)}document.getElementById('settingsModal').style.display='flex'}
+        function closeModal(){document.getElementById('settingsModal').style.display='none';currentEditingId=null}
+        function saveSetting(){if(currentEditingId===null)return;const data=settingsDB[currentEditingId];let newValue;if(Array.isArray(data.current)){newValue=[];for(let i=0;i<3;i++){const val=parseInt(document.getElementById(`list_input_${i}`).value);if(isNaN(val)){alert(`Please enter a valid number for Value ${i+1}`);return}const minVal=Array.isArray(data.min)?data.min[i]:(data.min||-9999);const maxVal=Array.isArray(data.max)?data.max[i]:(data.max||99999);if(val<minVal||val>maxVal){alert(`Value ${i+1} must be between ${minVal} and ${maxVal}`);return}newValue.push(val)}}else{const inputField=document.getElementById('m_input');newValue=parseInt(inputField.value);if(isNaN(newValue)||newValue<(data.min||-9999)||newValue>(data.max||99999)){alert(`Please enter a value between ${data.min} and ${data.max}`);return}}fetch('/save_setting',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:currentEditingId,value:newValue})}).then(response=>response.json()).then(result=>{if(result.status==='success'){settingsDB[currentEditingId].current=newValue;console.log("Setting saved:",newValue);closeModal()}else{alert("Error saving setting.")}}).catch(error=>{console.error('Error:',error);alert("Could not connect to server.")})}
+        const resizer=document.getElementById('resizer');const sidebar=document.getElementById('sidebar');let isResizing=false;let maxWidthPx=window.innerWidth*0.75;
+        window.addEventListener('resize',()=>{setTimeout(()=>{const screenWidth=document.documentElement.clientWidth;const newLimit=screenWidth*0.75;maxWidthPx=newLimit;const currentWidth=sidebar.offsetWidth;if(currentWidth>newLimit){sidebar.style.width=`${newLimit}px`;resize()}else if(currentWidth>screenWidth){sidebar.style.width=`${screenWidth}px`;resize()}},100)});
+        const startResize=(e)=>{isResizing=true;resizer.classList.add('active');document.body.style.cursor='col-resize';document.body.style.userSelect='none'};
+        const stopResize=()=>{if(!isResizing)return;isResizing=false;resizer.classList.remove('active');document.body.style.cursor='default';document.body.style.userSelect='auto';resize()};
+        const onMove=(e)=>{if(!isResizing)return;let clientX=e.type.startsWith('touch')?e.touches[0].clientX:e.clientX;let newWidth=clientX;const minWidth=50;if(newWidth<minWidth)newWidth=minWidth;if(newWidth>maxWidthPx)newWidth=maxWidthPx;sidebar.style.width=`${newWidth}px`;if(this.resizeTimeout)clearTimeout(this.resizeTimeout);this.resizeTimeout=setTimeout(()=>{resize()},10)};
+        resizer.addEventListener('mousedown',startResize);document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',stopResize);resizer.addEventListener('touchstart',(e)=>{startResize(e)},{passive:false});document.addEventListener('touchmove',(e)=>{if(isResizing){e.preventDefault();onMove(e)}},{passive:false});document.addEventListener('touchend',stopResize);
+        function openDownloadModal(){document.getElementById('downloadModal').style.display='flex'}
+        function closeDownloadModal(){document.getElementById('downloadModal').style.display='none'}
+        function resetGraph(){graphMode='live';document.getElementById('resetGraphRow').style.display='none';resize()}
+        function downloadFile(type){if(type==='csv')window.location.href='/download_data_csv';else if(type==='meta')window.location.href='/download_metadata';closeDownloadModal()}
+        let tableData=[];let totalRecords=0;let BATCH_SIZE=100;let loadedBatches=0;async function initTable(){try{const response=await fetch('/get_data_info');if(!response.ok)throw new Error("Could not get data info");const info=await response.json();totalRecords=info.total;let totalBatches=Math.ceil(totalRecords/BATCH_SIZE);const tbody=document.getElementById('tableBody');tbody.innerHTML=`<tr><td colspan="12" style="text-align:center;">Loading ${totalRecords} records...</td></tr>`;for(let i=0;i<totalBatches;i++){const batchResponse=await fetch(`/get_table_data?batch_index=${i}`);if(!batchResponse.ok)break;const result=await batchResponse.json();if(result.batch_size){BATCH_SIZE=result.batch_size;totalBatches=Math.ceil(totalRecords/BATCH_SIZE);}result.data.reverse();tableData=tableData.concat(result.data);loadedBatches++}parseTableDates();updateTable()}catch(error){console.error("Init Error:",error);document.getElementById('tableBody').innerHTML='<tr><td colspan="12" style="text-align:center; color:red;">Error initializing data.</td></tr>'}}
+		let isLoadingData=false;async function ensureDataLoaded(page){if(isLoadingData)return;isLoadingData=true;const recordIndex=(page-1)*rowsPerPage;let batchIndexNeeded=Math.floor(recordIndex/BATCH_SIZE);while(batchIndexNeeded>=loadedBatches){try{if(loadedBatches>0){const tbody=document.getElementById('tableBody');if(!tbody.innerHTML.includes('Loading more')){tbody.innerHTML='<tr><td colspan="12" style="text-align:center;">Loading more data...</td></tr>'}}const response=await fetch(`/get_table_data?batch_index=${loadedBatches}`);if(!response.ok)throw new Error(`Server Error: ${response.status}`);const result=await response.json();if(result.batch_size)BATCH_SIZE=result.batch_size;if(totalRecords===0)totalRecords=result.total;if(!result.data||result.data.length===0){console.log("Empty batch received, stopping.");break}result.data.reverse();tableData=tableData.concat(result.data);loadedBatches++;batchIndexNeeded=Math.floor(recordIndex/BATCH_SIZE)}catch(error){console.error("Error loading batch:",error);isLoadingData=false;return false}}isLoadingData=false;return true}
+        async function updateTable(){if(totalRecords===0){initTable();return}const tbody=document.getElementById('tableBody');tbody.innerHTML='<tr><td colspan="12" style="text-align:center;">Loading...</td></tr>';const success=await ensureDataLoaded(currentPage);tbody.innerHTML='';if(!success){tbody.innerHTML='<tr><td colspan="12" style="text-align:center; color:red;">Error loading data.</td></tr>';return}const startIndex=(currentPage-1)*rowsPerPage;const endIndex=startIndex+rowsPerPage;const safeEndIndex=Math.min(endIndex,tableData.length);const pageData=tableData.slice(startIndex,safeEndIndex);if(pageData.length===0){tbody.innerHTML='<tr><td colspan="12" style="text-align:center;">No data available</td></tr>'}else{pageData.forEach(row=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${row.date}</td><td>${row.low}</td><td>${row.high}</td><td>${row.timeLow}</td><td>${row.timeHigh}</td><td>${row.filled}</td><td>${row.conf}</td><td>${row.change}</td><td>${row.usage}</td><td>${row.reading}</td><td>${row.fillTime}</td><td>${row.flow}</td>`;tbody.appendChild(tr)})}renderPagination()}
+        initTable();
+        function renderPagination(){const container=document.getElementById('paginationBtns');container.innerHTML='';const totalPages=Math.ceil(totalRecords/rowsPerPage);if(totalPages<=1)return;const createBtn=(page,text,isActive=false,isDisabled=false)=>{const btn=document.createElement('div');btn.className=`page-btn ${isActive?'active':''} ${isDisabled?'disabled':''}`;btn.innerText=text;if(!isDisabled&&!isActive)btn.onclick=()=>goToPage(page);return btn};container.appendChild(createBtn(1,'1',currentPage===1));if(currentPage>3)container.appendChild(createBtn(null,'...',false,true));let startRange=Math.max(2,currentPage-1);let endRange=Math.min(totalPages-1,currentPage+1);for(let i=startRange;i<=endRange;i++){container.appendChild(createBtn(i,i,currentPage===i))}if(currentPage<totalPages-2)container.appendChild(createBtn(null,'...',false,true));if(totalPages>1)container.appendChild(createBtn(totalPages,totalPages,currentPage===totalPages))}
+        let currentPage=1;let rowsPerPage=25;
+        function changeRowsPerPage(){const select=document.getElementById('rowsSelect');rowsPerPage=parseInt(select.value);currentPage=1;updateTable()}
+        function goToPage(page){currentPage=page;updateTable()}
+        const jumpInput=document.getElementById('pageJumpInput');
+        jumpInput.addEventListener('keydown',function(e){if(e.key==='Enter'){const val=parseInt(this.value);const totalPages=Math.ceil(totalRecords/rowsPerPage);if(!isNaN(val)&&val>=1&&val<=totalPages){goToPage(val);this.value=''}else{alert(`Invalid Page. Please enter a number between 1 and ${totalPages}.`);this.value='' }}});
+        window.addEventListener('resize',resize);canvas.addEventListener('mousemove',(e)=>{const rect=canvas.getBoundingClientRect();const scaleX=canvas.width/rect.width;const x=(e.clientX-rect.left)*scaleX;draw(x)});canvas.addEventListener('mouseleave',()=>draw(-1));
+        function parseTableDates(){if(parsedTableData.length>0)return;parsedTableData=tableData.map(row=>{const parts=row.date.split('/');const d=new Date(parseInt(parts[2]),parseInt(parts[0])-1,parseInt(parts[1]));return{dateObj:d,...row}});parsedTableData.sort((a,b)=>a.dateObj-b.dateObj)}
+        function openGraphModal(){document.getElementById('graphModal').style.display='flex';parseTableDates();const endDateInput=document.getElementById('graphEndDate');const startDateInput=document.getElementById('graphStartDate');if(parsedTableData.length>0){if(!endDateInput.value){const maxD=parsedTableData[parsedTableData.length-1].dateObj;endDateInput.value=maxD.toISOString().split('T')[0]}if(!startDateInput.value){updateStartDateFromQuickSelect()}}}
+        function closeGraphModal(){document.getElementById('graphModal').style.display='none'}
+        function selectAllGraphs(){document.querySelectorAll('#dataColumnContainer input[type="checkbox"]').forEach(cb=>cb.checked=true)}
+        function deselectAllGraphs(){document.querySelectorAll('#dataColumnContainer input[type="checkbox"]').forEach(cb=>cb.checked=false)}
+        function updateStartDateFromQuickSelect(){const range=document.getElementById('graphTimeRange').value;const endDateInput=document.getElementById('graphEndDate');const startDateInput=document.getElementById('graphStartDate');let endDate=endDateInput.value?new Date(endDateInput.value):new Date();if(range==='all'){if(parsedTableData.length>0){const minDate=parsedTableData[0].dateObj;startDateInput.value=minDate.toISOString().split('T')[0]}}else{const days=parseInt(range);const startDate=new Date(endDate);startDate.setDate(startDate.getDate()-days);startDateInput.value=startDate.toISOString().split('T')[0]}}
+        function generateGraph(){parseTableDates();closeGraphModal();graphMode='custom';document.getElementById('resetGraphRow').style.display = 'flex';resize()}
+        function draw(mouseX=-1){ctx.fillStyle='#000';ctx.fillRect(0,0,width,height);let isTimeSeries=false;let displayTitle="";let plots=[];let hasFlow=false;let hasGallons=false;if(graphMode==='custom'&&parsedTableData.length>0){const checkboxes=document.querySelectorAll('#dataColumnContainer input:checked');let selectedCols=[];checkboxes.forEach(cb=>selectedCols.push(cb.value));if(selectedCols.length===0)return;const startInput=document.getElementById('graphStartDate').value;const endInput=document.getElementById('graphEndDate').value;let filtered=[];if(startInput&&endInput){const[sY,sM,sD]=startInput.split('-');const startDate=new Date(parseInt(sY),parseInt(sM)-1,parseInt(sD));const[eY,eM,eD]=endInput.split('-');const endDate=new Date(parseInt(eY),parseInt(eM)-1,parseInt(eD));startDate.setHours(0,0,0,0);endDate.setHours(23,59,59,999);filtered=parsedTableData.filter(d=>d.dateObj>=startDate&&d.dateObj<=endDate);displayTitle=`Selected Data (${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()})`}else{const range=document.getElementById('graphTimeRange').value;const maxDate=parsedTableData[parsedTableData.length-1].dateObj;if(range==='all'){filtered=parsedTableData;displayTitle="Data (All History)"}else{const days=parseInt(range);const cutoff=new Date(maxDate.getTime()-(days*24*60*60*1000));filtered=parsedTableData.filter(d=>d.dateObj>=cutoff);displayTitle=`Data (Last ${range} Days)`}}const colors={reading:'#00d2ff',usage:'#ff6b6b',change:'#feca57',filled:'#48dbfb',low:'#ffa502',high:'#ff6348',flow:'#ff9ff3',timeLowMins:'#7bed9f',timeHighMins:'#2ed573',fillTimeSecs:'#1e90ff'};selectedCols.forEach(key=>{if(key==='flow')hasFlow=true;else hasGallons=true;plots.push({id:key,data:filtered.map(d=>({x:d.dateObj.getTime(),y:parseFloat(d[key])||0})),color:colors[key],label:key.charAt(0).toUpperCase()+key.slice(1)})});isTimeSeries=true}else{graphMode='live';if(currentRangeHours===168)displayTitle="Tank Level (Past Week)";else if(currentRangeHours===72)displayTitle="Tank Level (Past 3 Days)";else displayTitle="Tank Level (Past 24 Hours)";hasGallons=true;plots.push({id:'reading',data:visibleData.map((val,idx)=>({x:idx,y:val})),color:'#00d2ff',label:'Level'});isTimeSeries=false}if(plots.length===0)return;let minGal=Infinity,maxGal=-Infinity;let minFlow=Infinity,maxFlow=-Infinity;plots.forEach(p=>{if(p.id==='flow'){p.data.forEach(pt=>{if(pt.y<minFlow)minFlow=pt.y;if(pt.y>maxFlow)maxFlow=pt.y})}else{p.data.forEach(pt=>{if(pt.y<minGal)minGal=pt.y;if(pt.y>maxGal)maxGal=pt.y})}});let rangeGal=maxGal-minGal;if(rangeGal===0)rangeGal=1;minGal-=rangeGal*0.1;maxGal+=rangeGal*0.1;rangeGal=maxGal-minGal;let rangeFlow=maxFlow-minFlow;if(rangeFlow===0)rangeFlow=1;minFlow-=rangeFlow*0.1;maxFlow+=rangeFlow*0.1;rangeFlow=maxFlow-minFlow;ctx.strokeStyle='#333';ctx.fillStyle='#888';ctx.font='12px monospace';ctx.lineWidth=1;ctx.textAlign='right';ctx.textBaseline='middle';for(let i=0;i<=5;i++){const yRatio=i/5;const yPos=padding.top+graphHeight-(yRatio*graphHeight);const value=minGal+(yRatio*rangeGal);ctx.beginPath();ctx.moveTo(padding.left,yPos);ctx.lineTo(width-padding.right,yPos);ctx.stroke();ctx.fillText(value.toFixed(0),padding.left-10,yPos)}if(hasFlow&&!hasGallons){for(let i=0;i<=5;i++){const yRatio=i/5;const yPos=padding.top+graphHeight-(yRatio*graphHeight);const value=minFlow+(yRatio*rangeFlow);ctx.fillText(value.toFixed(1),padding.left-10,yPos)}}else if(hasFlow){ctx.textAlign='left';ctx.fillStyle='#ff9ff3';for(let i=0;i<=5;i++){const yRatio=i/5;const yPos=padding.top+graphHeight-(yRatio*graphHeight);const value=minFlow+(yRatio*rangeFlow);ctx.fillText(value.toFixed(1),width-padding.right+10,yPos)}ctx.fillStyle='#888'}ctx.textAlign='center';ctx.textBaseline='top';ctx.fillStyle='#888';let minX=0,maxX=0;if(plots[0].data.length>0){if(isTimeSeries){minX=plots[0].data[0].x;maxX=plots[0].data[plots[0].data.length-1].x}else{minX=0;maxX=plots[0].data.length-1}}if(isTimeSeries){const timeSpan=maxX-minX;for(let i=0;i<=4;i++){const ratio=i/4;const xPos=padding.left+(ratio*graphWidth);const timeAtX=new Date(minX+(ratio*timeSpan));const m=(timeAtX.getMonth()+1).toString().padStart(2,'0');const d=timeAtX.getDate().toString().padStart(2,'0');ctx.fillText(`${m}/${d}`,xPos,height-20)}}else{for(let i=0;i<=4;i++){const xRatio=i/4;const xPos=padding.left+(xRatio*graphWidth);const hoursAgo=currentRangeHours-(i*(currentRangeHours/4));const labelTime=new Date(endTime.getTime()-(hoursAgo*60*60*1000));if(currentRangeHours>24){const m=(labelTime.getMonth()+1).toString().padStart(2,'0');const d=labelTime.getDate().toString().padStart(2,'0');ctx.fillText(`${m}/${d}`,xPos,height-20)}else{const hh=labelTime.getHours().toString().padStart(2,'0');const mm=labelTime.getMinutes().toString().padStart(2,'0');ctx.fillText(`${hh}:${mm}`,xPos,height-20)}}}plots.forEach(p=>{ctx.beginPath();ctx.strokeStyle=p.color;ctx.lineWidth=1.5;let minVal,maxVal,rangeVal;if(p.id==='flow'){minVal=minFlow;maxVal=maxFlow;rangeVal=rangeFlow}else{minVal=minGal;maxVal=maxGal;rangeVal=rangeGal}const totalDataPoints=p.data.length;if(totalDataPoints>graphWidth){for(let px=0;px<=graphWidth;px++){const ratio=px/graphWidth;const idx=Math.floor(ratio*(totalDataPoints-1));const safeIdx=Math.max(0,Math.min(idx,totalDataPoints-1));const pt=p.data[safeIdx];const x=padding.left+px;const y=padding.top+graphHeight-((pt.y-minVal)/rangeVal)*graphHeight;if(px===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}}else{p.data.forEach((pt,i)=>{const xRatio=(pt.x-minX)/(maxX-minX);const x=padding.left+(xRatio*graphWidth);const y=padding.top+graphHeight-((pt.y-minVal)/rangeVal)*graphHeight;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)})}ctx.stroke()});if(mouseX>=0){let safeIdx=0;let snappedX=mouseX;if(plots.length>0&&plots[0].data.length>0){const primaryData=plots[0].data;const mouseTime=minX+((mouseX-padding.left)/graphWidth)*(maxX-minX);let minDist=Infinity;for(let i=0;i<primaryData.length;i++){const dist=Math.abs(primaryData[i].x-mouseTime);if(dist<minDist){minDist=dist;safeIdx=i}else{break}}const closestPt=primaryData[safeIdx];const xRatio=(closestPt.x-minX)/(maxX-minX);snappedX=padding.left+(xRatio*graphWidth)}ctx.beginPath();ctx.setLineDash([5,5]);ctx.strokeStyle='#fff';ctx.moveTo(snappedX,padding.top);ctx.lineTo(snappedX,height-padding.bottom);ctx.stroke();ctx.setLineDash([]);let timeString="";const targetXVal=plots[0].data[safeIdx].x;if(isTimeSeries){const d=new Date(targetXVal);timeString=d.toLocaleDateString()}else{const totalDataPoints=plots[0].data.length;const indexFromEnd=(totalDataPoints-1)-safeIdx;const hoursPerPoint=currentRangeHours/(totalDataPoints-1);const hoursAgo=indexFromEnd*hoursPerPoint;const hoverTime=new Date(endTime.getTime()-(hoursAgo*60*60*1000));const days=["SUN","MON","TUE","WED","THU","FRI","SAT"];timeString=days[hoverTime.getDay()]+" "+hoverTime.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}let tooltipLines=[];tooltipLines.push({color:'#fff',text:timeString});plots.forEach(p=>{const pIdx=Math.min(safeIdx,p.data.length-1);const closest=p.data[pIdx];const val=(closest.y!==null&&!isNaN(closest.y))?closest.y.toFixed(1):"N/A";tooltipLines.push({color:p.color,text:`${p.label}: ${val}`})});ctx.font='12px monospace';let maxW=0;tooltipLines.forEach(l=>{const w=ctx.measureText(l.text).width;if(w>maxW)maxW=w});const boxWidth=maxW+20;const boxHeight=tooltipLines.length*20+10;let boxX=snappedX+10;const rightEdge=snappedX+10+boxWidth;if(rightEdge>width-padding.right){boxX=snappedX-boxWidth-10}const boxY=50;ctx.fillStyle='rgba(0,0,0,0.8)';ctx.fillRect(boxX,boxY,boxWidth,boxHeight);ctx.textAlign='left';ctx.textBaseline='top';tooltipLines.forEach((l,i)=>{ctx.fillStyle=l.color;ctx.fillText(l.text,boxX+10,boxY+5+(i*20))});document.getElementById('graphTitle').innerText=displayTitle}else{document.getElementById('graphTitle').innerText=displayTitle}}
+        (function(){const isPumpingW="VAR_STATUSWELL";const timeLeft=parseInt("VAR_TIME_LEFT_RESET");const timerElement=document.getElementById('wellResetTimer');if(isPumpingW==="False"&&timeLeft>0){timerElement.style.display='block'}else{timerElement.style.display='none'}})();
+        function resize(){width=container.clientWidth;height=container.clientHeight;canvas.width=width;canvas.height=height;graphWidth=width-padding.left-padding.right;graphHeight=height-padding.top-padding.bottom;draw()}
+        setRange(24);
+    </script>
+    <div id="settingsModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header" id="m_title">Setting Name</div>
+            <div class="modal-row"><span class="modal-label">Description:</span><div id="m_desc" style="font-size: 0.9rem;">Description goes here...</div></div>
+            <div class="modal-row"><span class="modal-label">Default Value:</span><div id="m_default" style="color: #888; font-style: italic;">100</div></div>
+            <div class="modal-row"><label class="modal-label" id="m_label">Current Setting:</label><div id="inputContainer"></div></div>
+            <div class="modal-buttons"><button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-save" onclick="saveSetting()">Save Changes</button></div>
+        </div>
+    </div>
+    <div id="downloadModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 300px;">
+            <div class="modal-header">Download Data</div>
+            <div class="modal-row"><p style="color: #ccc; font-size: 0.9rem;">Select a file type to download:</p></div>
+            <div class="modal-buttons" style="flex-direction: column; gap: 10px;"><button class="btn-save" onclick="downloadFile('csv')">Download .CSV Data</button><button class="btn-save" onclick="downloadFile('meta')" style="background-color: #17a2b8;">Download Metadata</button><button class="btn-cancel" onclick="closeDownloadModal()">Cancel</button></div>
+        </div>
+    </div>
+    <div id="graphModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">Graph Settings</div>
+            <div class="modal-row"><label class="modal-label">Quick Select:</label><select id="graphTimeRange" class="modal-input" onchange="updateStartDateFromQuickSelect()"><option value="7">Last 1 Week</option><option value="14">Last 2 Weeks</option><option value="30" selected>Last 1 Month</option><option value="60">Last 2 Months</option><option value="90">Last 3 Months</option><option value="180">Last 6 Months</option><option value="365">Last 1 Year</option><option value="730">Last 2 Years</option><option value="1825">Last 2 Years</option><option value="all">All Data</option></select></div>
+            <div class="modal-row" style="display:flex; gap:10px;"><div style="flex:1;"><label class="modal-label">Start Date:</label><input type="date" id="graphStartDate" class="modal-input"></div><div style="flex:1;"><label class="modal-label">End Date:</label><input type="date" id="graphEndDate" class="modal-input"></div></div>
+            <div class="modal-row"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;"><label class="modal-label" style="margin: 0;">Data to Plot:</label><div><button class="btn-tiny" onclick="selectAllGraphs()">All</button><button class="btn-tiny" onclick="deselectAllGraphs()">None</button></div></div><div id="dataColumnContainer" class="checkbox-grid"><label class="checkbox-label"><input type="checkbox" value="reading" checked> Tank Level</label><label class="checkbox-label"><input type="checkbox" value="high"> Highest Reading</label><label class="checkbox-label"><input type="checkbox" value="change"> Daily Change</label><label class="checkbox-label"><input type="checkbox" value="low"> Lowest Reading</label><label class="checkbox-label"><input type="checkbox" value="usage"> Daily Usage</label><label class="checkbox-label"><input type="checkbox" value="fillTimeSecs"> Fill Time</label><label class="checkbox-label"><input type="checkbox" value="filled"> Tank Fill</label><label class="checkbox-label"><input type="checkbox" value="timeHighMins"> Time at High</label><label class="checkbox-label"><input type="checkbox" value="flow"> Flow (Gal/min)</label><label class="checkbox-label"><input type="checkbox" value="timeLowMins"> Time at Low</label></div></div>
+            <div class="modal-buttons"><button class="btn-cancel" onclick="closeGraphModal()">Cancel</button><button class="btn-save" onclick="generateGraph()">Plot Graph</button></div>
+        </div>
+    </div>
+</body>
+</html>
