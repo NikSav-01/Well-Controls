@@ -2,7 +2,7 @@
 
 ---
 
-### System Purpose & Core Objectives
+## System Purpose & Core Objectives
 
 This system automates water transfer from a low-yield well into a residential storage tank for household use. It coordinates two pumps, prevents dry-run pump damage, and tracks well recovery and water usage performance over time.
 
@@ -11,26 +11,26 @@ This system automates water transfer from a low-yield well into a residential st
 * **Onsite & Remote Interfaces:** Features a local 20x4 character LCD display for immediate status checks alongside a lightweight web dashboard hosted on the Pico 2 W for remote monitoring.
 * **Data & Trend Logging:** A lightweight web page hosted on the Pico displays fill and usage patterns, storing data in space-efficient format of .bin for maximum longevity.
 
-### System Architecture
+## System Architecture
 
 ![System Architecture Diagram](assets/system-architecture.svg)
 
-### Key Features & Safety Logic
+## Key Features & Safety Logic
 
-#### Hardware Safety & Dry-Run Protection
+### Hardware Safety & Dry-Run Protection
 * **Dry-well Protection** The secondary Pico reads flow data from the well line, filtering out noise and outliers to confirm true flow stagnation. Simultaneously, motor amperage is monitored to catch sudden drops in load resistance when the pump loses prime. Combining both inputs ensures all dry-well events are caught immediately, cutting power to both pumps to prevent mechanical damage.
 * **Recovery Lockout:** An adjustable lockout timer starts after a dry-well event, giving the aquifer time to recover before re-attempting a fill cycle.
 * **Grace Period:** Allows a short grace period upon pump startup before starting dry-well monitoring, giving pumps time to prime and establishing baseline flow and current readings.
 * **Set/Reset Sensors:** Uses two tank level sensors in a set/reset configuration to prevent rapid cycling every time the water level fluctuates near the maximum level sensor.
 
-#### Displays & Optimized Storage
+### Displays & Optimized Storage
 * **On-Site Display:** A local 20x4 LCD display and a 4-button navigation array provide immediate feedback on tank capacity, active pump states, and daily fill/usage averages. Includes manual overrides for pump control, motor speed, and the dry-well recovery timer.
 * **Web Dashboard:** A lightweight web page hosted directly on the Pico 2 W featuring real-time water level graphs, full daily data spreadsheets, and remote system configuration options, similar to the on-site display.
 * **Long-term Data Retention:** Packs daily timestamped min/max tank levels, fill volumes, usage rates, and total pump runtimes into a custom binary (.bin) structure to minimize flash memory wear and stretch storage across the Pico 2 W's 4 MB flash memory.
 * **Short-term Data Retention:** Maintains high-resolution water level data in SRAM for 24-hour, 3-day, and 7-day web dashboard graphs. To save memory and network bandwidth on the Pico, data is transmitted as a compressed binary stream and unpacked in the browser for rendering, keeping in mind the 520 KB SRAM constraints of the Pico 2 W.
 * **Scheduled Memory Management:** Monitors system states to execute a clean reboot every five days during dormant periods (when pumps are idle), clearing heap allocation and preventing memory fragmentation from the web server.
 
-### Hardware Components
+## Hardware Components
 
 | Component | Specification / Model | Voltage / Interface  | System Role |
 | :--- | :--- | :--- | :--- |
@@ -51,33 +51,35 @@ This system automates water transfer from a low-yield well into a residential st
 | Booster Pump Relay | 1-Channel Relay Module (RK-S1B4) | 0/3.3V Logic → 0/12VDC | Switches 12VDC power to booster pump motor driver |
 | Pump Speed Controller | PWM Motor Driver (BTS7960B) | 3.3V PWM → 12V PWM | Regulates booster pump speed using a 16-bit PWM duty cycle |
 
-### Signal Conditioning & Noise Immunity
+## Signal Conditioning & Noise Immunity
 Operates near a VFD and a pump motor, creating significant electromagnetic interference. To maintain reliable operation, key hardware and software signal conditioning controls were added:
 
 Stronger Resistors: Utilizes external pull-down and pull-up resistors to sink ~0.2V of stray EMI voltage that bypassed the Pico's internal resistors.
 RC Line Filtering: Combines a capacitor and pull-down resistor at the main Pico to form a low-pass filter, absorbing noise spikes and signal stuttering across the 30 ft data lines.
 Software Sample Averaging: Uses a simple software filter to determine the true state of the pin by taking multiple consecutive readings and evaluating the majority result.
 
-### Repository Structure
+## Repository Structure
 ```
-├── main.py                        # Primary Pico 2 W control loop (FSM, web server, telemetry, logging)
-├── index.html                     # Web dashboard frontend hosted on Pico 2 W
-├── settings.txt                   # System configuration constants
-├── wifi.txt.example               # Template for local Wi-Fi credentials (SSID & Password)
-├── tank_data.bin                  # Binary log file storing historical daily tank level, fill amounts, etc.
-├── tank_data_metadata.txt         # Metadata file for tank_data.bin
-├── temp_high_low.txt              # Temporary daily storage incase of unexpected power loss
-├── secondary_main.py              # Secondary Pico main control loop
+├── main.py                         # Primary Pico 2 W control loop (FSM, web server, telemetry, logging)
+├── index.html                      # Web dashboard frontend hosted on Pico 2 W
+├── settings.txt                    # System configuration constants
+├── wifi.txt.example                # Template for local Wi-Fi credentials (SSID & Password)
+├── tank_data.bin                   # Binary log file storing historical daily tank level, fill amounts, etc.
+├── tank_data_metadata.txt          # Metadata file for tank_data.bin
+├── temp_high_low.txt               # Temporary daily storage incase of unexpected power loss
+├── secondary_main.py               # Secondary Pico main control loop
 ├── tools/
-│   └── dome_calculation.py        # Offline numerical integration script for non-linear tank geometry
+│   └── dome_calculation.py         # Offline numerical integration script for non-linear tank geometry
 └── assets/
     ├── system-architecture.svg     # Rendered system architecture diagram
     ├── flowchart.mmd               # Mermaid source code for architecture diagram
-    ├── dashboard-overview.png      # Screenshot of live telemetry dashboard
-    └── dashboard-controls.png      # Screenshot of web control interface
+    ├── data_spreadsheet.png        # Screenshot of recorded data array
+    ├── graph_settings.png          # Screenshot of settings for recorded data graphing
+    ├── history_graphed.png         # Screenshot of graphed recorded data
+    └── real_time_graph.png         # Screenshot of live telemetry dashboard
 ```
 
-### Script & File Overview
+## Script & File Overview
 `main.py` (Primary Controller): Runs the main Finite State Machine on the Raspberry Pi Pico 2 W. Performs sensor reads, menu navigation, binary file logging, web server requests, and safety relay interlocks.
 `secondary_main.py` (Secondary Controller): Runs on the remote Pico connected to the flow sensor. Filters hall-effect pulse streams, sending a clean binary flow signal to the primary Pico over a 30-foot data line.
 `index.html`: Single-page web dashboard stored on the Pico 2 W filesystem, providing real-time telemetry graphs, status updates, and manual override controls.
@@ -90,3 +92,26 @@ Configuration & Storage Files:
 * `tank_data_metadata.txt`: Index and metadata tracking schema for `tank_data.bin`.
 * `temp_high_low.txt`: Temporary daily file that prevents data loss if power drops before committing to `tank_data.bin`.
 * `system-architecture.svg` & `flowchar.mmd`: Rendered SVG vector diagram and raw Mermaid source code.
+* `real_time_graph.png`, `data_spreadsheet.png `, `graph_settings.png` & `history_graphed.png`: Screenshots of web dashboard
+
+## Web Dashboard Display
+
+### Front Page & Real Time Graph
+<img src="assets/real_time_graph.png" width="800" alt="Front Page/Real Time Graph Screenshot" />
+
+* Front page of web dashboard, with options to change time window of real Time graph, editing settings, and ability to download a .csv of the historical tank data
+
+### Table of Recorded Data
+<img src="assets/data_spreadsheet.png" width="800" alt="Recorded Data Table Screenshot" />
+
+* Table of historical data from tank_data.bin, using ellipsized pagination for accesible table navigation, along with settings to graph the data
+
+### Recorded Data Graphing Settings
+<img src="assets/graph_settings.png" width="300" alt="Recorded Data Graphing Settings Screenshot" />
+
+* Settings to graph historical data, choosing the time span and values to graph
+
+### Recorded Data Graphed
+<img src="assets/history_graphed.png" width="800" alt="Recorded Data Graphed Screenshot" />
+
+* Graph showcasing chosen values over chosen time period
