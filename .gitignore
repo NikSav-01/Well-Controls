@@ -1,0 +1,14 @@
+# Credentials & sensitive data
+wifi.txt.example
+
+# Dynamic logs and runtime state
+tank_data.bin
+settings.txt
+temp_high_low.txt
+
+# Python / IDE cache files
+__pycache__/
+*.py[cod]
+.vscode/
+.idea/
+.DS_Store
