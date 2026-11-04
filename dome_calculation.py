@@ -25,12 +25,12 @@ def calculate(H, h, r, b, d, n_theta=50, n_p=50):
 
     return first - integral
 
-domeLookup = array.array('f')
+dome_lookup = array.array('f')
 ft = 6.3
 
 # Init the domeLookup to calculate this once per boot
 while True:
     ft += .01
     if ft > 7: break # Max height water will reach + couple inches
-    domeLookup.append(calculate(H=(ft-6.3)*12, h=13.04, r=47.42, b=11.875, d=35.295, n_theta=50, n_p=50) / 1728) # 1728 Cu in -> Cu ft
+    dome_lookup.append(calculate(H=(ft-6.3)*12, h=13.04, r=47.42, b=11.875, d=35.295, n_theta=50, n_p=50) / 1728) # 1728 Cu in -> Cu ft
 print("Done mapping domeLookup")
